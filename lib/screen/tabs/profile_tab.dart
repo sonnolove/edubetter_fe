@@ -31,66 +31,172 @@ class _ProfileTabState extends State<ProfileTab> {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
+    return Scaffold(
+      backgroundColor: Colors.grey.shade100, // Màu nền nhẹ
+      body: SingleChildScrollView(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.blueAccent,
-              child: Icon(Icons.person, size: 60, color: Colors.white),
-            ),
-            const SizedBox(height: 24),
-            // ... (Phần hiển thị thông tin user giữ nguyên) ...
-            Text(
-              user?.email ?? "",
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 40),
-
-            // --- NÚT ADMIN (Chỉ hiện nếu là Admin) ---
-            if (_isAdmin)
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.admin_panel_settings),
-                  label: const Text("TRANG QUẢN TRỊ (ADMIN)"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.all(16),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const AdminDashboard()),
-                    );
-                  },
-                ),
-              ),
-
-            // Nút Đăng xuất
-            SizedBox(
+            // 1. PHẦN HEADER PROFILE (Cố định)
+            Container(
               width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.logout),
-                label: const Text("Đăng xuất"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
                 ),
-                onPressed: () async {
-                  await FirebaseAuth.instance.signOut();
-                },
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))
+                ],
               ),
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.blue.shade50,
+                    backgroundImage: user?.photoURL != null ? NetworkImage(user!.photoURL!) : null,
+                    child: user?.photoURL == null
+                        ? const Icon(Icons.person, size: 60, color: Colors.blueAccent)
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    user?.displayName ?? "Người dùng Demo",
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    user?.email ?? "Chưa cập nhật email",
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                  ),
+                  const SizedBox(height: 8),
+                  // Badge hiển thị chức vụ
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _isAdmin ? Colors.orange.shade100 : Colors.green.shade100,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      _isAdmin ? "QUẢN TRỊ VIÊN" : "HỌC VIÊN",
+                      style: TextStyle(
+                        color: _isAdmin ? Colors.orange.shade800 : Colors.green.shade800,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // 2. PHẦN MENU ĐIỀU HƯỚNG (3 GẠCH NGANG)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                child: Column(
+                  children: [
+                    // Đây là Widget tạo hiệu ứng "Bấm là hiện/ẩn"
+                    ExpansionTile(
+                      initiallyExpanded: true, // Mặc định mở sẵn cho dễ nhìn
+                      leading: const Icon(Icons.menu, color: Colors.blueAccent), // Icon 3 gạch
+                      title: const Text(
+                        "Menu Chức Năng",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      subtitle: const Text("Bấm để mở rộng/thu gọn"),
+                      children: [
+                        // --- DANH SÁCH CÁC CHỨC NĂNG ---
+                        
+                        // Chức năng Admin (Chỉ hiện nếu là Admin)
+                        if (_isAdmin)
+                          _buildMenuItem(
+                            icon: Icons.dashboard_customize,
+                            title: "Trang Quản Trị (Admin)",
+                            color: Colors.orange,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const AdminDashboard()),
+                              );
+                            },
+                          ),
+
+                        _buildMenuItem(
+                          icon: Icons.settings,
+                          title: "Cài đặt tài khoản",
+                          onTap: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Tính năng đang phát triển")),
+                            );
+                          },
+                        ),
+
+                        _buildMenuItem(
+                          icon: Icons.history_edu,
+                          title: "Lịch sử làm bài",
+                          onTap: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Xem lịch sử điểm số...")),
+                            );
+                          },
+                        ),
+
+                        const Divider(height: 1), // Đường kẻ ngăn cách
+
+                        _buildMenuItem(
+                          icon: Icons.logout,
+                          title: "Đăng xuất",
+                          color: Colors.redAccent,
+                          onTap: () async {
+                            await FirebaseAuth.instance.signOut();
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            Text(
+              "Phiên bản 1.0.0",
+              style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  // Widget con để vẽ từng dòng menu cho gọn code
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Color color = Colors.black87,
+  }) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: color, size: 22),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(color: color, fontWeight: FontWeight.w500),
+      ),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+      onTap: onTap,
     );
   }
 }

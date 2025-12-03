@@ -152,4 +152,21 @@ class ApiService {
       return false;
     }
   }
+
+    // --- QUIZ HISTORY ---
+  Future<List<dynamic>> getQuizHistory() async {
+    final url = Uri.parse('$_baseUrl/api/quizzes');
+    try {
+      final response = await http.get(url, headers: await _getHeaders());
+      
+      if (response.statusCode == 200) {
+        return json.decode(response.body) as List<dynamic>;
+      } else {
+        throw Exception('Failed to load quiz history: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching quiz history: $e');
+      rethrow;
+    }
+  }
 }
