@@ -54,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const Icon(Icons.school, size: 80, color: Colors.blue),
             const SizedBox(height: 20),
             const Text(
-              'NextGurukul Clone',
+              'My Edu App',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
