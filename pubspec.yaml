@@ -52,6 +52,10 @@ dependencies:
   cupertino_icons: ^1.0.8
   url_launcher: ^6.3.2
   intl: ^0.20.2
+  image_picker: ^1.2.1
+  firebase_storage: ^12.4.10
+  flutter_image_compress: ^2.3.0
+  youtube_player_iframe: ^5.2.2
 
 dev_dependencies:
   flutter_test:

@@ -63,9 +63,15 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => LessonDetailScreen(lesson: lesson),
+                            builder: (_) => LessonDetailScreen(
+                              lesson: lesson,
+                              subjectId: widget.subject.id, // <--- THÊM DÒNG NÀY
+                            ),
                           ),
-                        );
+                        ).then((_) {
+                           // Khi quay lại từ bài học, có thể reload lại trang chi tiết môn học 
+                           // (nếu trang này cũng hiển thị trạng thái đã học của từng bài)
+                        });
                       },
                     );
                   },

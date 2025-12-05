@@ -83,6 +83,51 @@ class ApiService {
     await http.delete(url, headers: await _getHeaders());
   }
 
+  // --- ADMIN: USER MANAGEMENT (Full CRUD) ---
+  
+  // // 1. Lấy danh sách (Đã có)
+  // Future<List<dynamic>> getAllUsers() async {
+  //   final url = Uri.parse('$_baseUrl/api/admin/users');
+  //   final response = await http.get(url, headers: await _getHeaders());
+  //   if (response.statusCode == 200) {
+  //     return json.decode(response.body) as List<dynamic>;
+  //   } else {
+  //     throw Exception('Failed to load users');
+  //   }
+  // }
+
+  // 2. Tạo User mới
+  Future<void> createUser(Map<String, dynamic> data) async {
+    final url = Uri.parse('$_baseUrl/api/admin/users');
+    final response = await http.post(
+      url, 
+      headers: await _getHeaders(), 
+      body: json.encode(data)
+    );
+    
+    if (response.statusCode != 201) {
+      final error = json.decode(response.body)['error'] ?? 'Unknown error';
+      throw Exception(error);
+    }
+  }
+
+  // 3. Cập nhật User
+  Future<void> updateUser(String uid, Map<String, dynamic> data) async {
+    final url = Uri.parse('$_baseUrl/api/admin/users/$uid');
+    await http.put(
+      url, 
+      headers: await _getHeaders(), 
+      body: json.encode(data)
+    );
+  }
+
+  // 4. Xóa User
+  Future<void> deleteUser(String uid) async {
+    final url = Uri.parse('$_baseUrl/api/admin/users/$uid');
+    await http.delete(url, headers: await _getHeaders());
+  }
+
+
   // --- USER & COURSES & QUIZ ---
   Future<void> createProfile(String fullName, String? avatarUrl) async {
     final url = Uri.parse('$_baseUrl/api/users/create-profile');
@@ -119,6 +164,29 @@ class ApiService {
       return json.decode(response.body) as List<dynamic>;
     } else {
       throw Exception('Failed to load lessons');
+    }
+  }
+
+  // --- LEARNING PROGRESS ---
+  Future<void> updateLearningProgress(String lessonId, String subjectId, bool isCompleted) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final url = Uri.parse('$_baseUrl/api/learning-progress');
+    try {
+      await http.post(
+        url,
+        headers: await _getHeaders(),
+        body: json.encode({
+          'userId': user.uid,
+          'lessonId': lessonId,
+          'subjectId': subjectId,
+          'isCompleted': isCompleted,
+        }),
+      );
+    } catch (e) {
+      print('Error updating progress: $e');
+      throw e; // Ném lỗi để UI biết mà xử lý (ví dụ: hiện thông báo lỗi)
     }
   }
 
@@ -169,4 +237,32 @@ class ApiService {
       rethrow;
     }
   }
+
+  // Trong class ApiService, thêm đoạn code này vào cuối (trước dấu } đóng class)
+
+  // --- CHAT TUTOR (GIA SƯ AI) ---
+  Future<String> chatWithTutor(String question) async {
+    final url = Uri.parse('$_baseUrl/api/chat-tutor');
+    
+    // Gửi câu hỏi lên Node.js
+    final response = await http.post(
+      url,
+      headers: await _getHeaders(),
+      body: json.encode({'question': question}),
+    );
+
+    if (response.statusCode == 200) {
+      // Node.js trả về: { success: true, data: { answer: "...", sources: [...] } }
+      final jsonResponse = json.decode(response.body);
+      final aiData = jsonResponse['data'];
+      
+      // Bạn có thể lấy thêm sources nếu muốn hiển thị nguồn tài liệu
+      return aiData['answer'] ?? "Lỗi: Không có câu trả lời.";
+    } else {
+      throw Exception('Chat failed: ${response.body}');
+    }
+  }
+
+
+  
 }

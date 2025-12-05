@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_edu_app/screen/admin/admin_dashboard.dart';
 import 'package:my_edu_app/screen/quiz/quiz_history_screen.dart';
 import 'package:my_edu_app/services/api_service.dart';
+import 'package:my_edu_app/screen/auth_gate.dart';
 
 class ProfileDialog extends StatefulWidget {
   const ProfileDialog({super.key});
@@ -122,8 +123,19 @@ class _ProfileDialogState extends State<ProfileDialog> {
               text: "Đăng xuất",
               color: Colors.red,
               onTap: () async {
+                // 1. Đăng xuất khỏi Firebase
                 await FirebaseAuth.instance.signOut();
-                if (context.mounted) Navigator.pop(context);
+                
+                if (context.mounted) {
+                  // 2. Đóng Dialog
+                  Navigator.pop(context); 
+                  
+                  // 3. Xóa sạch lịch sử điều hướng và về trang gốc (AuthGate sẽ lo phần còn lại)
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const AuthGate()),
+                    (route) => false, // Xóa hết các màn hình trước đó
+                  );
+                }
               },
             ),
           ],
