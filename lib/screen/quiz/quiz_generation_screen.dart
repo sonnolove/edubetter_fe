@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_edu_app/models/lesson.dart';
 import 'package:my_edu_app/services/api_service.dart';
-import 'package:my_edu_app/screen/quiz/quiz_screen.dart'; // <--- QUAN TRỌNG: Phải import file này
+import 'package:my_edu_app/screen/quiz/quiz_screen.dart';
 
 class QuizGenerationScreen extends StatefulWidget {
   final List<Lesson> lessons;
@@ -22,6 +22,9 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
   final _titleController = TextEditingController();
   final ApiService _apiService = ApiService();
   bool _isGenerating = false;
+  
+  // Biến lưu số lượng câu hỏi, mặc định là 5
+  int _numberOfQuestions = 5;
 
   @override
   void initState() {
@@ -29,9 +32,7 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
     _titleController.text = "Quiz ôn tập";
   }
 
-  // --- HÀM QUAN TRỌNG NHẤT ---
   Future<void> _generateQuiz() async {
-    // 1. Kiểm tra input
     if (_selectedLessonIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Hãy chọn ít nhất 1 bài học!')),
@@ -42,19 +43,17 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
     setState(() => _isGenerating = true);
 
     try {
-      // 2. Gọi API tạo Quiz
+      // Gọi API với tham số số lượng câu hỏi
       final result = await _apiService.generateQuiz(
         _selectedLessonIds.toList(),
         _titleController.text,
+        numberOfQuestions: _numberOfQuestions, // Truyền số lượng đã chọn
       );
 
       if (!mounted) return;
 
-      // 3. Xử lý kết quả & Điều hướng
-      // Lấy phần 'quizData' từ JSON trả về của server
       final quizData = result['quizData'];
 
-      // Chuyển sang màn hình làm bài Quiz
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -78,55 +77,112 @@ class _QuizGenerationScreenState extends State<QuizGenerationScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 1. Tên bài kiểm tra
             TextField(
               controller: _titleController,
               decoration: const InputDecoration(
                 labelText: 'Tên bài kiểm tra',
                 border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.edit),
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              "Chọn các bài học để AI tạo câu hỏi:",
-              style: TextStyle(fontWeight: FontWeight.bold),
+
+            // 2. Chọn số lượng câu hỏi (Mới)
+            DropdownButtonFormField<int>(
+              value: _numberOfQuestions,
+              decoration: const InputDecoration(
+                labelText: 'Số lượng câu hỏi',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.numbers),
+              ),
+              items: const [
+                DropdownMenuItem(value: 5, child: Text("5 câu (Nhanh)")),
+                DropdownMenuItem(value: 10, child: Text("10 câu (Tiêu chuẩn)")),
+                DropdownMenuItem(value: 15, child: Text("15 câu (Chi tiết)")),
+                DropdownMenuItem(value: 20, child: Text("20 câu (Thử thách)")),
+                DropdownMenuItem(value: 25, child: Text("25 câu (Tổng hợp)")),
+              ],
+              onChanged: (val) {
+                setState(() {
+                  _numberOfQuestions = val!;
+                });
+              },
             ),
+            const SizedBox(height: 24),
+
+            // 3. Danh sách bài học
+            const Text(
+              "Chọn bài học để ôn tập:",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
             Expanded(
-              child: ListView.builder(
-                itemCount: widget.lessons.length,
-                itemBuilder: (context, index) {
-                  final lesson = widget.lessons[index];
-                  final isSelected = _selectedLessonIds.contains(lesson.id);
-                  return CheckboxListTile(
-                    title: Text(lesson.title),
-                    value: isSelected,
-                    onChanged: (val) {
-                      setState(() {
-                        if (val == true) {
-                          _selectedLessonIds.add(lesson.id);
-                        } else {
-                          _selectedLessonIds.remove(lesson.id);
-                        }
-                      });
-                    },
-                  );
-                },
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ListView.separated(
+                  itemCount: widget.lessons.length,
+                  separatorBuilder: (ctx, i) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final lesson = widget.lessons[index];
+                    final isSelected = _selectedLessonIds.contains(lesson.id);
+                    return CheckboxListTile(
+                      title: Text(lesson.title),
+                      subtitle: Text(
+                        "Bài số ${lesson.order}", 
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                      value: isSelected,
+                      activeColor: Colors.deepPurple,
+                      onChanged: (val) {
+                        setState(() {
+                          if (val == true) {
+                            _selectedLessonIds.add(lesson.id);
+                          } else {
+                            _selectedLessonIds.remove(lesson.id);
+                          }
+                        });
+                      },
+                    );
+                  },
+                ),
               ),
             ),
+            const SizedBox(height: 16),
+
+            // 4. Nút tạo
             SizedBox(
               width: double.infinity,
+              height: 50,
               child: ElevatedButton.icon(
                 onPressed: _isGenerating ? null : _generateQuiz,
                 icon: _isGenerating
                     ? const SizedBox.shrink()
                     : const Icon(Icons.auto_awesome),
                 label: _isGenerating
-                    ? const Text("Đang tạo câu hỏi...")
-                    : const Text("GENERATE QUIZ (AI)"),
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          SizedBox(
+                            width: 20, 
+                            height: 20, 
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                          ),
+                          SizedBox(width: 10),
+                          Text("AI đang soạn đề..."),
+                        ],
+                      )
+                    : const Text("TẠO ĐỀ THI NGAY"),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.all(16),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             )
