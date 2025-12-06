@@ -190,15 +190,25 @@ class ApiService {
     }
   }
 
-  Future<dynamic> generateQuiz(List<String> lessonIds, String title) async {
+ // --- HÀM TẠO QUIZ (CẬP NHẬT MỚI) ---
+  Future<dynamic> generateQuiz(List<String> lessonIds, String title, {int numberOfQuestions = 5}) async {
     final url = Uri.parse('$_baseUrl/api/quizzes/generate');
+    
     final response = await http.post(
       url,
       headers: await _getHeaders(),
-      body: json.encode({'lessonIds': lessonIds, 'title': title}),
+      body: json.encode({
+        'lessonIds': lessonIds,
+        'title': title,
+        'numberOfQuestions': numberOfQuestions, // Gửi số lượng câu hỏi lên server
+      }),
     );
-    if (response.statusCode == 201) return json.decode(response.body);
-    throw Exception('Failed to generate quiz: ${response.body}');
+
+    if (response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to generate quiz: ${response.body}');
+    }
   }
 
   // --- CHECK ADMIN ROLE ---
@@ -238,26 +248,56 @@ class ApiService {
     }
   }
 
-  // Trong class ApiService, thêm đoạn code này vào cuối (trước dấu } đóng class)
 
-  // --- CHAT TUTOR (GIA SƯ AI) ---
-  Future<String> chatWithTutor(String question) async {
+  // --- CHAT TUTOR & HISTORY ---
+
+  // 1. Lấy danh sách các cuộc trò chuyện
+  Future<List<dynamic>> getChatSessions() async {
+    final url = Uri.parse('$_baseUrl/api/chat/sessions');
+    try {
+      final response = await http.get(url, headers: await _getHeaders());
+      if (response.statusCode == 200) {
+        return json.decode(response.body) as List<dynamic>;
+      } else {
+        return []; // Trả về rỗng nếu lỗi hoặc chưa có
+      }
+    } catch (e) {
+      print('Error fetching sessions: $e');
+      return [];
+    }
+  }
+
+  // 2. Lấy nội dung tin nhắn của 1 cuộc trò chuyện
+  Future<List<dynamic>> getChatMessages(String sessionId) async {
+    final url = Uri.parse('$_baseUrl/api/chat/sessions/$sessionId/messages');
+    try {
+      final response = await http.get(url, headers: await _getHeaders());
+      if (response.statusCode == 200) {
+        return json.decode(response.body) as List<dynamic>;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching messages: $e');
+      return [];
+    }
+  }
+
+  // 3. Gửi tin nhắn (CẬP NHẬT: Nhận thêm sessionId)
+  // Trả về Map đầy đủ để lấy lại sessionId mới nếu có
+  Future<Map<String, dynamic>> chatWithTutor(String question, {String? sessionId}) async {
     final url = Uri.parse('$_baseUrl/api/chat-tutor');
-    
-    // Gửi câu hỏi lên Node.js
     final response = await http.post(
       url,
       headers: await _getHeaders(),
-      body: json.encode({'question': question}),
+      body: json.encode({
+        'question': question,
+        'sessionId': sessionId // Gửi kèm ID nếu đang chat dở
+      }),
     );
 
     if (response.statusCode == 200) {
-      // Node.js trả về: { success: true, data: { answer: "...", sources: [...] } }
-      final jsonResponse = json.decode(response.body);
-      final aiData = jsonResponse['data'];
-      
-      // Bạn có thể lấy thêm sources nếu muốn hiển thị nguồn tài liệu
-      return aiData['answer'] ?? "Lỗi: Không có câu trả lời.";
+      return json.decode(response.body); // Trả về { success, data, sessionId }
     } else {
       throw Exception('Chat failed: ${response.body}');
     }

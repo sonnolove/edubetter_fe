@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:my_edu_app/screen/auth_gate.dart';
-import 'package:my_edu_app/screen/chat/chat_screen.dart'; // <--- Import màn hình Chat mới
+import 'package:my_edu_app/screen/chat/chat_history_screen.dart'; // Màn hình chat
+import 'package:my_edu_app/screen/quiz/quiz_history_screen.dart'; // <--- Import màn hình Lịch sử Quiz
 import 'package:my_edu_app/screen/tabs/subjects_tab.dart';
 import 'package:my_edu_app/screen/tabs/profile_tab.dart'; 
 import 'package:my_edu_app/screen/tabs/quiz_select_tab.dart';
@@ -18,24 +19,24 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
   // Danh sách các màn hình chức năng cho học viên
   final List<Widget> _pages = [
-    const SubjectsTab(),      
-    const QuizSelectTab(),   
-    const ChatScreen(),      // <--- Thay thế Center Text bằng ChatScreen
-    const ProfileTab(),      
+    const SubjectsTab(),        // Index 0
+    const QuizSelectTab(),     // Index 1
+    const ChatHistoryScreen(), // Index 2
+    const QuizHistoryScreen(), // Index 3: <--- Màn hình Lịch sử Quiz mới
+    const ProfileTab(),        // Index 4
   ];
 
   final List<String> _titles = [
     'Khóa học nổi bật',
     'Tạo Quiz AI',
     'Hỏi đáp thông minh',
+    'Lịch sử làm bài', // Tiêu đề tương ứng
     'Hồ sơ cá nhân'
   ];
 
-  // ... (Các phần code còn lại giữ nguyên như file cũ) ...
-  
   void _onSelectItem(int index) {
     setState(() => _selectedIndex = index);
-    Navigator.pop(context); 
+    Navigator.pop(context); // Đóng Drawer sau khi chọn
   }
 
   Future<void> _handleLogout() async {
@@ -50,10 +51,6 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ... (Giữ nguyên phần build Scaffold, AppBar, Drawer) ...
-    // ... Chỉ cần đảm bảo body gọi đúng _pages[_selectedIndex] là được
-    // Nếu bạn cần code đầy đủ để copy-paste cho chắc chắn, hãy dùng code dưới:
-    
     final user = FirebaseAuth.instance.currentUser;
     final String userInitial = (user?.displayName?.isNotEmpty == true) 
         ? user!.displayName![0].toUpperCase() 
@@ -70,9 +67,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         foregroundColor: Colors.white,
       ),
       
+      // --- DRAWER NAVIGATION ---
       drawer: Drawer(
         child: Column(
           children: [
+            // Header
             UserAccountsDrawerHeader(
               accountName: Text(displayName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               accountEmail: Text(email),
@@ -89,18 +88,27 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
                 ),
               ),
             ),
+
+            // Body: Menu Items
             Expanded(
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
                   _buildDrawerItem(icon: Icons.school, text: 'Khóa học', index: 0),
                   _buildDrawerItem(icon: Icons.auto_awesome, text: 'Tạo Quiz AI', index: 1),
-                  _buildDrawerItem(icon: Icons.chat_bubble, text: 'Hỏi đáp', index: 2), // Tab Chat
+                  _buildDrawerItem(icon: Icons.chat_bubble, text: 'Hỏi đáp', index: 2),
+                  
+                  // --- MỤC MỚI THÊM VÀO ---
+                  _buildDrawerItem(icon: Icons.history_edu, text: 'Lịch sử Quiz', index: 3),
+                  // ------------------------
+
                   const Divider(),
-                  _buildDrawerItem(icon: Icons.person, text: 'Hồ sơ cá nhân', index: 3),
+                  _buildDrawerItem(icon: Icons.person, text: 'Hồ sơ cá nhân', index: 4),
                 ],
               ),
             ),
+
+            // Footer
             const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.power_settings_new, color: Colors.red),
@@ -112,7 +120,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         ),
       ),
 
-      body: _pages[_selectedIndex], // Hiển thị trang tương ứng
+      body: _pages[_selectedIndex],
     );
   }
 
