@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "84665289194",
-    "project_id": "my-cool-project-22-27",
-    "storage_bucket": "my-cool-project-22-27.firebasestorage.app"
+    "project_number": "622907104478",
+    "project_id": "myeduapp-0411",
+    "storage_bucket": "myeduapp-0411.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:84665289194:android:6d78342fc75f6270734a93",
+        "mobilesdk_app_id": "1:622907104478:android:dbcf7ccd78d4bf4c7b364f",
         "android_client_info": {
           "package_name": "com.example.my_edu_app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyB8vsOPyMPH3w3h4z9YPyFHYDaxn0hTt0M"
+          "current_key": "AIzaSyDphSTuxdi0za9rXUeo02xCDfr-GDRLvu8"
         }
       ],
       "services": {

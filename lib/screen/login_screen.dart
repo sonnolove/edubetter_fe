@@ -6,6 +6,10 @@ import 'package:my_edu_app/screen/register_screen.dart';
 import 'package:my_edu_app/services/auth_service.dart';
 import 'package:my_edu_app/screen/student_home_screen.dart';
 
+// --- IMPORT MỚI ---
+import 'package:my_edu_app/services/api_service.dart'; 
+import 'package:my_edu_app/screen/admin/admin_dashboard.dart'; // Đảm bảo đường dẫn đúng tới file AdminDashboard
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -19,27 +23,22 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   
   final AuthService _authService = AuthService();
+  final ApiService _apiService = ApiService(); // Khởi tạo ApiService để check quyền
   final LocalAuthentication auth = LocalAuthentication(); 
 
   @override
   void initState() {
     super.initState();
-    // Chạy kiểm tra ngay khi mở màn hình
     _checkBiometricLogin();
   }
 
-  // --- LOGIC QUAN TRỌNG NHẤT ---
+  // --- LOGIC SINH TRẮC HỌC ---
   Future<void> _checkBiometricLogin() async {
     final prefs = await SharedPreferences.getInstance();
-    
-    // 1. Kiểm tra: Người dùng đã bật trong cài đặt chưa?
-    // Mặc định là 'false' nếu chưa cài đặt bao giờ
     bool isEnabled = prefs.getBool('biometric_enabled') ?? false;
 
-    // 2. Nếu CHƯA BẬT (false) -> Dừng luôn, không hiện bảng quét
     if (!isEnabled) return; 
 
-    // 3. Nếu ĐÃ BẬT -> Kiểm tra phần cứng và hiện bảng
     try {
       bool canCheck = await auth.canCheckBiometrics;
       if (canCheck) {
@@ -49,7 +48,8 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         if (didAuthenticate && mounted) {
-           _navigateToHome(); // Vào trang chủ
+           // Đăng nhập thành công -> Gọi hàm điều hướng thông minh
+           _navigateToHome(); 
         }
       }
     } catch (e) {
@@ -67,7 +67,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await _authService.signIn(_emailController.text.trim(), _passwordController.text.trim());
-      if (mounted) _navigateToHome();
+      if (mounted) {
+        // Đăng nhập Firebase thành công -> Gọi hàm điều hướng để check quyền
+        await _navigateToHome();
+      }
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
@@ -75,12 +78,49 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _navigateToHome() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const StudentHomeScreen()),
-      (route) => false,
+  // --- HÀM ĐIỀU HƯỚNG THÔNG MINH (CHECK QUYỀN ADMIN) ---
+  Future<void> _navigateToHome() async {
+    // 1. Hiển thị Loading Dialog để người dùng biết đang xử lý
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(child: CircularProgressIndicator()),
     );
+
+    try {
+      // 2. Gọi API kiểm tra quyền Admin
+      bool isAdmin = await _apiService.isAdmin();
+      
+      if (!mounted) return;
+      Navigator.pop(context); // Tắt dialog loading
+
+      // 3. Điều hướng dựa trên quyền
+      if (isAdmin) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const AdminDashboard()),
+          (route) => false,
+        );
+      } else {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const StudentHomeScreen()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      // Nếu lỗi mạng hoặc lỗi server khi check quyền -> Mặc định cho về trang Student (an toàn)
+      // Hoặc bạn có thể hiện thông báo lỗi
+      print("Lỗi check quyền: $e");
+      if (mounted) {
+        Navigator.pop(context); // Tắt dialog
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const StudentHomeScreen()),
+          (route) => false,
+        );
+      }
+    }
   }
 
   @override
@@ -118,7 +158,6 @@ class _LoginScreenState extends State<LoginScreen> {
             
             const SizedBox(height: 16),
             
-            // Nút phụ: Cho phép kích hoạt thủ công nếu người dùng đã bật nhưng lỡ tắt bảng
             TextButton.icon(
               onPressed: _checkBiometricLogin,
               icon: const Icon(Icons.fingerprint),

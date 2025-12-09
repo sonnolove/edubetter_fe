@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_edu_app/models/subject.dart'; // Dùng Subject
+import 'package:my_edu_app/models/subject.dart';
 import 'package:my_edu_app/models/lesson.dart';
 import 'package:my_edu_app/screen/quiz/quiz_generation_screen.dart';
 import 'package:my_edu_app/services/api_service.dart';
@@ -18,7 +18,7 @@ class _QuizSelectTabState extends State<QuizSelectTab> {
   @override
   void initState() {
     super.initState();
-    _subjectsFuture = _apiService.getSubjects(); // Gọi hàm lấy Subject
+    _subjectsFuture = _apiService.getSubjects();
   }
 
   Future<void> _onSubjectSelected(Subject subject) async {
@@ -97,8 +97,9 @@ class _QuizSelectTabState extends State<QuizSelectTab> {
                       decoration: BoxDecoration(
                         color: Colors.blue.shade100,
                         borderRadius: BorderRadius.circular(8),
+                        // SỬA ĐỔI TẠI ĐÂY: Dùng ảnh local
                         image: DecorationImage(
-                          image: NetworkImage(subject.thumbnailUrl),
+                          image: AssetImage(subject.imageAsset), 
                           fit: BoxFit.cover,
                         ),
                       ),
