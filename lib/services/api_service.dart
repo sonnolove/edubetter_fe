@@ -303,6 +303,40 @@ class ApiService {
     }
   }
 
+// User tự cập nhật Profile
+  Future<void> updateMyProfile({String? fullName, String? email, String? avatarUrl}) async {
+    final url = Uri.parse('$_baseUrl/api/users/me');
+    final body = {};
+    if (fullName != null) body['fullName'] = fullName;
+    if (email != null) body['email'] = email;
+    if (avatarUrl != null) body['avatarUrl'] = avatarUrl;
 
+    final response = await http.put(
+      url,
+      headers: await _getHeaders(),
+      body: json.encode(body),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Lỗi cập nhật: ${response.body}');
+    }
+    
+    // Force reload lại user để app cập nhật thông tin mới ngay lập tức
+    await FirebaseAuth.instance.currentUser?.reload();
+  }
+
+  // User tự đổi mật khẩu
+  Future<void> changeMyPassword(String newPassword) async {
+    final url = Uri.parse('$_baseUrl/api/users/me/password');
+    final response = await http.put(
+      url,
+      headers: await _getHeaders(),
+      body: json.encode({'password': newPassword}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Lỗi đổi mật khẩu: ${response.body}');
+    }
+  }
   
 }

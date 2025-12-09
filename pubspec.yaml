@@ -59,6 +59,7 @@ dependencies:
   firebase_storage: ^12.4.10
   flutter_image_compress: ^2.3.0
   youtube_player_iframe: ^5.2.2
+  carousel_slider: ^5.0.0
 
   lottie: ^3.1.0
 
@@ -85,6 +86,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/animations/
+    - assets/image/
   
 
   # To add assets to your application, add an assets section, like this:

@@ -141,28 +141,8 @@ class _ProfileTabState extends State<ProfileTab> {
                         ),
                         // ---------------------------------------
 
-                        _buildMenuItem(
-                          icon: Icons.history_edu,
-                          title: "Lịch sử làm bài",
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Tính năng đang phát triển...")),
-                            );
-                          },
-                        ),
 
-                        const Divider(height: 1),
 
-                        _buildMenuItem(
-                          icon: Icons.logout,
-                          title: "Đăng xuất",
-                          color: Colors.redAccent,
-                          onTap: () async {
-                            await FirebaseAuth.instance.signOut();
-                            // Lưu ý: Nếu App của bạn có cơ chế AuthGate tự động bắt sự kiện signOut
-                            // thì không cần Navigator ở đây, nó sẽ tự chuyển về Login.
-                          },
-                        ),
                       ],
                     ),
                   ],

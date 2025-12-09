@@ -30,7 +30,8 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
   void _showSubjectDialog({Subject? subject}) {
     final nameController = TextEditingController(text: subject?.name ?? '');
     final descController = TextEditingController(text: subject?.description ?? '');
-    final imgController = TextEditingController(text: subject?.thumbnailUrl ?? '');
+    // Bỏ imgController vì không còn dùng link ảnh online
+    
     // ID chỉ cho nhập khi tạo mới, sửa thì không đổi ID được
     final idController = TextEditingController(text: subject?.id ?? ''); 
 
@@ -46,7 +47,7 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
                 TextField(controller: idController, decoration: const InputDecoration(labelText: "ID Môn (vd: math12)")),
               TextField(controller: nameController, decoration: const InputDecoration(labelText: "Tên Môn")),
               TextField(controller: descController, decoration: const InputDecoration(labelText: "Mô tả")),
-              TextField(controller: imgController, decoration: const InputDecoration(labelText: "Link Ảnh")),
+              // Đã xóa trường nhập Link Ảnh
             ],
           ),
         ),
@@ -57,7 +58,7 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
               final data = {
                 "name": nameController.text,
                 "description": descController.text,
-                "thumbnailUrl": imgController.text,
+                "thumbnailUrl": "", // Gửi chuỗi rỗng lên server vì App không dùng nữa
               };
               if (subject == null) data["id"] = idController.text; // Gửi ID lên server
 
@@ -102,7 +103,13 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
             itemBuilder: (context, index) {
               final sub = subjects[index];
               return ListTile(
-                leading: Image.network(sub.thumbnailUrl, width: 50, height: 50, fit: BoxFit.cover, errorBuilder: (_,__,___) => const Icon(Icons.error)),
+                // SỬA ĐỔI TẠI ĐÂY: Hiển thị ảnh local
+                leading: Image.asset(
+                  sub.imageAsset, 
+                  width: 50, height: 50, 
+                  fit: BoxFit.cover, 
+                  errorBuilder: (_,__,___) => const Icon(Icons.book),
+                ),
                 title: Text(sub.name),
                 subtitle: Text(sub.id),
                 trailing: Row(
