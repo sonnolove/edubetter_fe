@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:my_edu_app/screen/admin/admin_dashboard.dart';
 import 'package:my_edu_app/services/api_service.dart';
+// [QUAN TRỌNG] Import file màn hình cài đặt mới
+import 'package:my_edu_app/screen/settings/account_settings_screen.dart'; 
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({super.key});
@@ -32,11 +34,11 @@ class _ProfileTabState extends State<ProfileTab> {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade100, // Màu nền nhẹ
+      backgroundColor: Colors.grey.shade100,
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 1. PHẦN HEADER PROFILE (Cố định)
+            // 1. PHẦN HEADER PROFILE
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
@@ -93,7 +95,7 @@ class _ProfileTabState extends State<ProfileTab> {
 
             const SizedBox(height: 20),
 
-            // 2. PHẦN MENU ĐIỀU HƯỚNG (3 GẠCH NGANG)
+            // 2. PHẦN MENU ĐIỀU HƯỚNG
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Card(
@@ -101,19 +103,17 @@ class _ProfileTabState extends State<ProfileTab> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                 child: Column(
                   children: [
-                    // Đây là Widget tạo hiệu ứng "Bấm là hiện/ẩn"
                     ExpansionTile(
-                      initiallyExpanded: true, // Mặc định mở sẵn cho dễ nhìn
-                      leading: const Icon(Icons.menu, color: Colors.blueAccent), // Icon 3 gạch
+                      initiallyExpanded: true,
+                      leading: const Icon(Icons.menu, color: Colors.blueAccent),
                       title: const Text(
                         "Menu Chức Năng",
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       subtitle: const Text("Bấm để mở rộng/thu gọn"),
                       children: [
-                        // --- DANH SÁCH CÁC CHỨC NĂNG ---
                         
-                        // Chức năng Admin (Chỉ hiện nếu là Admin)
+                        // Chức năng Admin
                         if (_isAdmin)
                           _buildMenuItem(
                             icon: Icons.dashboard_customize,
@@ -127,27 +127,31 @@ class _ProfileTabState extends State<ProfileTab> {
                             },
                           ),
 
+                        // --- [SỬA ĐỔI] NÚT CÀI ĐẶT TÀI KHOẢN ---
                         _buildMenuItem(
                           icon: Icons.settings,
                           title: "Cài đặt tài khoản",
                           onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Tính năng đang phát triển")),
+                            // Chuyển sang màn hình cài đặt mới
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const AccountSettingsScreen()),
                             );
                           },
                         ),
+                        // ---------------------------------------
 
                         _buildMenuItem(
                           icon: Icons.history_edu,
                           title: "Lịch sử làm bài",
                           onTap: () {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Xem lịch sử điểm số...")),
+                              const SnackBar(content: Text("Tính năng đang phát triển...")),
                             );
                           },
                         ),
 
-                        const Divider(height: 1), // Đường kẻ ngăn cách
+                        const Divider(height: 1),
 
                         _buildMenuItem(
                           icon: Icons.logout,
@@ -155,6 +159,8 @@ class _ProfileTabState extends State<ProfileTab> {
                           color: Colors.redAccent,
                           onTap: () async {
                             await FirebaseAuth.instance.signOut();
+                            // Lưu ý: Nếu App của bạn có cơ chế AuthGate tự động bắt sự kiện signOut
+                            // thì không cần Navigator ở đây, nó sẽ tự chuyển về Login.
                           },
                         ),
                       ],
@@ -175,7 +181,6 @@ class _ProfileTabState extends State<ProfileTab> {
     );
   }
 
-  // Widget con để vẽ từng dòng menu cho gọn code
   Widget _buildMenuItem({
     required IconData icon,
     required String title,
