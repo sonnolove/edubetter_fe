@@ -31,6 +31,9 @@ dependencies:
   flutter:
     sdk: flutter
 
+  local_auth: ^2.1.6
+  shared_preferences: ^2.5.4
+
   # Firebase (Bắt buộc)
   firebase_core: ^3.2.0    # Lõi Firebase
   firebase_auth: ^5.1.2   # Xác thực (Đăng nhập/Đăng ký)
@@ -57,6 +60,8 @@ dependencies:
   flutter_image_compress: ^2.3.0
   youtube_player_iframe: ^5.2.2
 
+  lottie: ^3.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -78,6 +83,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - assets/animations/
+  
 
   # To add assets to your application, add an assets section, like this:
   # assets:
