@@ -7,7 +7,7 @@ import 'package:my_edu_app/screen/tabs/subjects_tab.dart';
 import 'package:my_edu_app/screen/tabs/profile_tab.dart'; 
 import 'package:my_edu_app/screen/tabs/quiz_select_tab.dart';
 import 'package:my_edu_app/screen/login_screen.dart';
-import 'package:my_edu_app/global_key.dart';
+import 'package:my_edu_app/global_key.dart'; // Import Global Key
 
 class StudentHomeScreen extends StatefulWidget {
   const StudentHomeScreen({super.key});
@@ -109,9 +109,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen> {
         : "G"; // G for Guest
 
     return Scaffold(
-      key: homeScaffoldKey,
+      key: homeScaffoldKey, // <--- QUAN TRỌNG: Gắn Key vào đây để mở Drawer từ trang con
+      
       appBar: _selectedIndex == 0 
-          ? null 
+          ? null // Trang chủ (SubjectsTab) tự vẽ Header nên ẩn AppBar này đi
           : AppBar(
               title: Text(_titles[_selectedIndex]),
               centerTitle: true,

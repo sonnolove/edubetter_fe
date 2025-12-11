@@ -36,7 +36,7 @@ class Subject {
     if (n.contains('lý') || n.contains('vật lý')) return 'assets/image/physics.jpg';
     if (n.contains('hóa')) return 'assets/image/chemistry.jpg';
     if (n.contains('sinh')) return 'assets/image/biology.jpg';
-    if (n.contains('sử') || n.contains('lịch sử')) return 'assets/image/history.jpg';
+    if (n.contains('sử') || n.contains('lịch sử')) return 'assets/image/his.jpg';
     if (n.contains('địa')) return 'assets/image/geography.jpg';
     if (n.contains('pháp')) return 'assets/image/economic.jpg';
     
