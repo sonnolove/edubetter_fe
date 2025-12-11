@@ -24,12 +24,13 @@ class LessonDetailScreen extends StatefulWidget {
 class _LessonDetailScreenState extends State<LessonDetailScreen> {
   mobile.YoutubePlayerController? _mobileController;
   final ApiService _apiService = ApiService();
-  bool _isCompleted = false; // Trạng thái đã học xong hay chưa (Local state)
+  bool _isCompleted = false;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _isCompleted = widget.lesson.isCompleted;
     // Khởi tạo video player... (Giữ nguyên code cũ)
     final videoId = mobile.YoutubePlayer.convertUrlToId(widget.lesson.youtubeUrl);
     if (videoId != null && !kIsWeb) {
