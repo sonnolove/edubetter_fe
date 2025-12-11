@@ -14,16 +14,30 @@ class ApiService {
     }
   }
 
+  // Hàm tạo Header thông minh
   Future<Map<String, String>> _getHeaders() async {
+    // 1. Lấy user hiện tại
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      return {'Content-Type': 'application/json'};
-    }
-    final idToken = await user.getIdToken();
-    return {
+    
+    // 2. Header mặc định (luôn cần)
+    Map<String, String> headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer $idToken',
+      'Accept': 'application/json',
     };
+
+    // 3. CHỈ KHI ĐÃ ĐĂNG NHẬP mới lấy Token gắn vào
+    if (user != null) {
+      try {
+        final token = await user.getIdToken();
+        headers['Authorization'] = 'Bearer $token';
+      } catch (e) {
+        print("Lỗi lấy token: $e");
+      }
+    }
+    
+    // 4. Nếu LÀ KHÁCH -> Vẫn trả về headers (nhưng không có Authorization)
+    // Để server biết đây là khách và trả về dữ liệu public
+    return headers;
   }
 
   // --- ADMIN: QUẢN LÝ USER ---
@@ -143,28 +157,94 @@ class ApiService {
   }
 
   Future<List<dynamic>> getSubjects() async {
-    final url = Uri.parse('$_baseUrl/api/courses');
+    // Đảm bảo URL đúng (nếu chạy máy ảo Android thì localhost là 10.0.2.2)
+    final url = Uri.parse('$_baseUrl/api/courses'); 
+    
     try {
-      final response = await http.get(url, headers: await _getHeaders());
+      final headers = await _getHeaders();
+      print("Đang gọi API: $url với headers: $headers"); // <--- In ra xem có token không
+
+      final response = await http.get(url, headers: headers);
+
       if (response.statusCode == 200) {
+        print("Load data thành công!");
         return json.decode(response.body) as List<dynamic>;
       } else {
+        print("Lỗi Server: ${response.statusCode} - ${response.body}");
         throw Exception('Failed to load subjects');
       }
     } catch (e) {
-      print('Error fetching subjects: $e');
-      return [];
+      print('Lỗi fetching subjects: $e');
+      return []; // Trả về rỗng nếu lỗi
     }
   }
 
+ // --- SỬA ĐỔI: Lấy bài học VÀ ghép với tiến độ học tập ---
   Future<List<dynamic>> getLessons(String subjectId) async {
-    final url = Uri.parse('$_baseUrl/api/courses/$subjectId/lessons');
-    final response = await http.get(url, headers: await _getHeaders());
-    if (response.statusCode == 200) {
-      return json.decode(response.body) as List<dynamic>;
-    } else {
+    final user = FirebaseAuth.instance.currentUser;
+    final headers = await _getHeaders();
+
+    // BƯỚC 1: Gọi API lấy danh sách bài học gốc (như cũ)
+    final lessonUrl = Uri.parse('$_baseUrl/api/courses/$subjectId/lessons');
+    final lessonResponse = await http.get(lessonUrl, headers: headers);
+
+    if (lessonResponse.statusCode != 200) {
       throw Exception('Failed to load lessons');
     }
+
+    // Convert dữ liệu bài học sang dạng List Map (để có thể chỉnh sửa)
+    List<dynamic> lessons = List<Map<String, dynamic>>.from(
+        json.decode(lessonResponse.body).map((x) => Map<String, dynamic>.from(x))
+    );
+
+    // BƯỚC 2: Nếu user đã đăng nhập, gọi thêm API lấy tiến độ
+    if (user != null) {
+      try {
+        // [QUAN TRỌNG] Gọi API lấy danh sách ID các bài đã học.
+        // Lưu ý: Đường dẫn này phải khớp với Server Node.js của bạn.
+        // Thường là GET /api/learning-progress?userId=...&subjectId=...
+        final progressUrl = Uri.parse(
+            '$_baseUrl/api/learning-progress?userId=${user.uid}&subjectId=$subjectId'
+        );
+        
+        final progressResponse = await http.get(progressUrl, headers: headers);
+
+        if (progressResponse.statusCode == 200) {
+          final progressData = json.decode(progressResponse.body);
+          
+          // Tạo một danh sách chứa các ID bài đã học cho dễ tìm kiếm
+          Set<String> completedLessonIds = {};
+
+          // Xử lý dữ liệu trả về (tùy theo server trả về mảng String hay mảng Object)
+          if (progressData is List) {
+            for (var item in progressData) {
+              if (item is String) {
+                completedLessonIds.add(item); // Nếu server trả về ["id1", "id2"]
+              } else if (item is Map && item['lessonId'] != null) {
+                completedLessonIds.add(item['lessonId']); // Nếu server trả về [{"lessonId": "id1"}, ...]
+              }
+            }
+          }
+
+          // BƯỚC 3: MERGE (GHÉP DỮ LIỆU)
+          // Duyệt qua từng bài học, kiểm tra xem ID có nằm trong danh sách đã học không
+          for (var lesson in lessons) {
+            final String id = lesson['id'].toString();
+            // Nếu tìm thấy ID trong danh sách đã học -> gán is_completed = true
+            if (completedLessonIds.contains(id)) {
+              lesson['is_completed'] = true; 
+            } else {
+              lesson['is_completed'] = false;
+            }
+          }
+          print("Đã cập nhật trạng thái học: $completedLessonIds"); // Log để kiểm tra
+        }
+      } catch (e) {
+        print("Lỗi khi lấy tiến độ học tập (Không ảnh hưởng app, chỉ không hiện tick xanh): $e");
+      }
+    }
+
+    return lessons;
   }
 
   // --- LEARNING PROGRESS ---
