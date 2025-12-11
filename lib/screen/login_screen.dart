@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:local_auth/local_auth.dart'; // Thư viện sinh trắc
-import 'package:shared_preferences/shared_preferences.dart'; // Thư viện lưu trữ
-
+import 'package:lottie/lottie.dart'; // [QUAN TRỌNG] Nhớ import lottie
+import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:my_edu_app/screen/register_screen.dart';
 import 'package:my_edu_app/services/auth_service.dart';
 import 'package:my_edu_app/screen/student_home_screen.dart';
-
-// --- IMPORT MỚI ---
-import 'package:my_edu_app/services/api_service.dart'; 
-import 'package:my_edu_app/screen/admin/admin_dashboard.dart'; // Đảm bảo đường dẫn đúng tới file AdminDashboard
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,8 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   
   final AuthService _authService = AuthService();
-  final ApiService _apiService = ApiService(); // Khởi tạo ApiService để check quyền
-  final LocalAuthentication auth = LocalAuthentication(); 
+  final LocalAuthentication auth = LocalAuthentication();
 
   @override
   void initState() {
@@ -32,12 +27,10 @@ class _LoginScreenState extends State<LoginScreen> {
     _checkBiometricLogin();
   }
 
-  // --- LOGIC SINH TRẮC HỌC ---
   Future<void> _checkBiometricLogin() async {
     final prefs = await SharedPreferences.getInstance();
     bool isEnabled = prefs.getBool('biometric_enabled') ?? false;
-
-    if (!isEnabled) return; 
+    if (!isEnabled) return;
 
     try {
       bool canCheck = await auth.canCheckBiometrics;
@@ -46,17 +39,12 @@ class _LoginScreenState extends State<LoginScreen> {
           localizedReason: 'Xác thực để đăng nhập',
           options: const AuthenticationOptions(stickyAuth: true, biometricOnly: true),
         );
-
-        if (didAuthenticate && mounted) {
-           // Đăng nhập thành công -> Gọi hàm điều hướng thông minh
-           _navigateToHome(); 
-        }
+        if (didAuthenticate && mounted) _navigateToHome();
       }
     } catch (e) {
-      debugPrint("Lỗi xác thực: $e");
+      debugPrint("Lỗi sinh trắc học: $e");
     }
   }
-  // -----------------------------
 
   Future<void> _handleLogin() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -67,10 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await _authService.signIn(_emailController.text.trim(), _passwordController.text.trim());
-      if (mounted) {
-        // Đăng nhập Firebase thành công -> Gọi hàm điều hướng để check quyền
-        await _navigateToHome();
-      }
+      if (mounted) _navigateToHome();
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
@@ -78,97 +63,158 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // --- HÀM ĐIỀU HƯỚNG THÔNG MINH (CHECK QUYỀN ADMIN) ---
-  Future<void> _navigateToHome() async {
-    // 1. Hiển thị Loading Dialog để người dùng biết đang xử lý
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => const Center(child: CircularProgressIndicator()),
+  void _navigateToHome() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const StudentHomeScreen()),
+      (route) => false,
     );
-
-    try {
-      // 2. Gọi API kiểm tra quyền Admin
-      bool isAdmin = await _apiService.isAdmin();
-      
-      if (!mounted) return;
-      Navigator.pop(context); // Tắt dialog loading
-
-      // 3. Điều hướng dựa trên quyền
-      if (isAdmin) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const AdminDashboard()),
-          (route) => false,
-        );
-      } else {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const StudentHomeScreen()),
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      // Nếu lỗi mạng hoặc lỗi server khi check quyền -> Mặc định cho về trang Student (an toàn)
-      // Hoặc bạn có thể hiện thông báo lỗi
-      print("Lỗi check quyền: $e");
-      if (mounted) {
-        Navigator.pop(context); // Tắt dialog
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const StudentHomeScreen()),
-          (route) => false,
-        );
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Lấy kích thước màn hình
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Icon(Icons.school, size: 80, color: Colors.blue),
-            const SizedBox(height: 20),
-            const Text('My Edu App', textAlign: TextAlign.center, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 40),
-            
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder(), prefixIcon: Icon(Icons.email)),
+      backgroundColor: Colors.grey[200], // Nền ngoài màu xám để khối nổi bật
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Container(
+            // --- TẠO KHỐI CHỮ NHẬT ĐỨNG ---
+            width: double.infinity,
+            constraints: const BoxConstraints(maxWidth: 400), // Giới hạn chiều rộng cho đẹp trên máy tính bảng
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20), // Bo góc khối
+              // --- TẠO BÓNG ĐỔ (SHADOW) ---
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2), // Màu bóng
+                  blurRadius: 15, // Độ nhòe của bóng
+                  offset: const Offset(0, 10), // Bóng đổ xuống dưới
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Mật khẩu', border: OutlineInputBorder(), prefixIcon: Icon(Icons.lock)),
-            ),
-            const SizedBox(height: 24),
+            // Dùng ClipRRect để cắt file Lottie theo góc bo tròn của Container
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
+                children: [
+                  // --- LỚP 1: BACKGROUND JSON ---
+                  Positioned.fill(
+                    child: Transform.translate(
+                      // [CHỈNH ĐỘ TỤT XUỐNG TẠI ĐÂY]
+                      // Tham số thứ 1 (0): Không dịch chuyển trái phải
+                      // Tham số thứ 2 (50): Dịch xuống 50px (Muốn xuống sâu hơn thì tăng lên 80, 100...)
+                      offset: const Offset(0, 150), 
+                      
+                      child: Transform(
+                        alignment: Alignment.center,
+                        // Code cũ để kéo dãn chiều ngang (giữ nguyên để không bị hở sườn)
+                        transform: Matrix4.diagonal3Values(1.5, 2.2, 10.0), 
+                        child: Lottie.asset(
+                          'assets/animations/login_bg.json',
+                          fit: BoxFit.contain, 
+                        ),
+                      ),
+                    ),
+                  ),
+                  // --- LỚP 2: LỚP PHỦ MỜ (Overlay) ---
+                  // Giúp chữ dễ đọc hơn trên nền động
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.white.withOpacity(0.85), // Màu trắng mờ 85%
+                    ),
+                  ),
 
-            ElevatedButton(
-              onPressed: _isLoading ? null : _handleLogin,
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), backgroundColor: Colors.blue, foregroundColor: Colors.white),
-              child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Đăng Nhập', style: TextStyle(fontSize: 16)),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            TextButton.icon(
-              onPressed: _checkBiometricLogin,
-              icon: const Icon(Icons.fingerprint),
-              label: const Text("Đăng nhập bằng vân tay"),
-            ),
+                  // --- LỚP 3: NỘI DUNG FORM ---
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min, // Co gọn theo nội dung
+                      children: [
+                        const Icon(Icons.school, size: 70, color: Colors.blueAccent),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'EDU BETTER',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                        ),
+                        const SizedBox(height: 30),
 
-            TextButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
-              child: const Text("Chưa có tài khoản? Đăng ký ngay"),
-            )
-          ],
+                        // Email Field
+                        TextField(
+                          controller: _emailController,
+                          decoration: InputDecoration(
+                            labelText: 'Email',
+                            prefixIcon: const Icon(Icons.email_outlined),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            filled: true,
+                            fillColor: Colors.white, // Nền ô nhập trắng rõ
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Password Field
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: 'Mật khẩu',
+                            prefixIcon: const Icon(Icons.lock_outline),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            filled: true,
+                            fillColor: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Nút Đăng nhập
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _handleLogin,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueAccent,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              elevation: 5, // Bóng của nút
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                : const Text('ĐĂNG NHẬP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Nút Vân tay & Đăng ký
+                        TextButton.icon(
+                          onPressed: _checkBiometricLogin,
+                          icon: const Icon(Icons.fingerprint),
+                          label: const Text("Đăng nhập nhanh"),
+                        ),
+                        
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text("Chưa có tài khoản?"),
+                            TextButton(
+                              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
+                              child: const Text("Đăng ký ngay", style: TextStyle(fontWeight: FontWeight.bold)),
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
