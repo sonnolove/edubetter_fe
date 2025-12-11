@@ -85,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
             // Text App (Optional)
             const SizedBox(height: 20),
             const Text(
-              "My Edu App",
+              "EDU BETTER",
               style: TextStyle(
                 fontSize: 28, 
                 fontWeight: FontWeight.bold, 
