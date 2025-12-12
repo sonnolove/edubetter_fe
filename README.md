@@ -1,91 +1,106 @@
-EduBetter - Mobile Application (Frontend)
-Technical Stack
-Du an su dung cac cong nghe va thu vien sau cho phan ung dung di dong:
+# 🎓 EduBetter - Mobile Application
 
-Language: Dart
+![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=flat&logo=flutter&logoColor=white)
+![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?style=flat&logo=dart&logoColor=white)
+![Firebase](https://img.shields.io/badge/Backend-Firebase-FFCA28?style=flat&logo=firebase&logoColor=black)
+![Platform](https://img.shields.io/badge/Platform-Android%20|%20iOS-green?style=flat)
 
-Core Framework: Flutter SDK
+> Ứng dụng hỗ trợ học tập thông minh tích hợp **Trí tuệ nhân tạo (AI)** và **Sinh trắc học**, giúp cá nhân hóa trải nghiệm học tập và tương tác cho sinh viên.
 
-State Management: Provider
+---
 
-Authentication & Database: Firebase Auth, Cloud Firestore
+## 📑 Mục Lục
+- [Giới thiệu](#-giới-thiệu)
+- [Tính năng chính](#-tính-năng-chính)
+- [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
+- [Yêu cầu & Cài đặt](#-yêu-cầu--cài-đặt)
+- [Hướng dẫn chạy dự án](#-hướng-dẫn-chạy-dự-án)
+- [Khắc phục lỗi thường gặp](#-khắc-phục-lỗi-thường-gặp)
 
-Networking: HTTP
+---
 
-Security & Hardware: Local Auth (Sinh trac hoc - Van tay/FaceID)
+## 🚀 Giới thiệu
 
-UI & Animations: Lottie, Carousel Slider, Flutter Markdown
+**EduBetter** là giải pháp E-learning hiện đại trên thiết bị di động. Dự án kết hợp sức mạnh của **Flutter** (Frontend), **Node.js** (Backend API Gateway) và **Python** (AI Microservice) để cung cấp các tính năng tiên tiến như Chatbot gia sư ảo và tạo đề thi tự động.
 
-Video Player: Youtube Player Flutter
+---
 
-System Architecture
-Luong xu ly du lieu (Data Flow) cua ung dung Client trong he thong Microservices:
+## ⭐ Tính năng chính
 
-User Interaction -> Flutter UI -> API Service -> Node.js Backend -> Python AI Service
+| Phân hệ | Tính năng | Mô tả |
+| :--- | :--- | :--- |
+| **Bảo mật** | **Sinh trắc học** | Đăng nhập nhanh bằng Vân tay / FaceID (Local Auth). |
+| | **Xác thực** | Đăng ký, Đăng nhập bảo mật qua Firebase Auth. |
+| **Học tập** | **Bài giảng** | Xem video (Youtube Player) và nội dung bài học chi tiết (Markdown). |
+| | **Tiến độ** | Theo dõi % hoàn thành khóa học theo thời gian thực. |
+| **AI** | **Chatbot** | Hỏi đáp kiến thức với gia sư ảo (Google Gemini). |
+| | **Quiz Generator** | Tự động sinh đề trắc nghiệm từ nội dung bài học. |
+| **Quản trị** | **Dashboard** | Quản lý môn học, bài giảng và người dùng (Phân quyền Admin). |
 
-Quy trinh xu ly chi tiet:
+---
 
-Client Layer: Ung dung Flutter chiu trach nhiem hien thi giao dien, xu ly thao tac nguoi dung (cham, vuot, nhap lieu).
+## 🏗 Kiến trúc hệ thống
 
-Security Layer: Xu ly dang nhap, dang ky qua Firebase va xac thuc sinh trac hoc cuc bo tren thiet bi.
+Dữ liệu được xử lý theo mô hình Microservices:
 
-Data Layer:
+`User Interaction` -> `Flutter UI` -> `API Service` -> `Node.js Backend` -> `Python AI Service`
 
-Goi API den Node.js Backend de lay du lieu khoa hoc, bai giang.
+* **Client Layer:** Flutter App (UI/UX, Local Auth).
+* **Security Layer:** Firebase Auth & Local Biometrics.
+* **Data Layer:**
+    * Node.js: API Gateway, Logic nghiệp vụ.
+    * Python: Xử lý NLP, Gemini AI.
+    * Firestore: Lưu trữ dữ liệu thời gian thực.
 
-Goi API Chatbot va Quiz Generator (thong qua Node.js Gateway) de tuong tac voi AI.
+---
 
-Dong bo tien do hoc tap thoi gian thuc voi Firestore.
+## 🛠 Yêu cầu & Cài đặt
 
-Installation and Setup
-ー Install Dependencies
-Tai va cai dat cac thu vien can thiet duoc khai bao trong pubspec.yaml:
+### Technical Stack
+* **Language:** Dart
+* **Core Framework:** Flutter SDK
+* **State Management:** Provider
+* **Database:** Cloud Firestore
+* **Libraries:** `http`, `local_auth`, `lottie`, `carousel_slider`, `flutter_markdown`...
 
-Bash
+### Yêu cầu môi trường
+1.  **Flutter SDK:** Phiên bản Stable mới nhất.
+2.  **Thiết bị:**
+    * Máy ảo Android (Emulator) API 35+.
+    * Thiết bị thật (Bật chế độ Developer).
+3.  **Backend:** Node.js và Python service đang chạy (xem repo backend).
 
+---
+
+## 💻 Hướng dẫn chạy dự án
+
+### Bước 1: Cài đặt thư viện
+Tại thư mục gốc của dự án, chạy lệnh:
+```bash
 flutter pub get
-ー Configuration
-Truoc khi khoi chay, can dam bao cac cau hinh moi truong sau:
+```
 
-Firebase Configuration:
+### Bước 2: Cấu hình Firebase
+1.  Tải file `google-services.json` từ Firebase Console.
+2.  Đặt vào thư mục: `android/app/`.
 
-Tai file google-services.json tu Firebase Console.
+### Bước 3: Cấu hình Android Manifest
+Đảm bảo file `android/app/src/main/AndroidManifest.xml` có các quyền sau để kết nối mạng và dùng sinh trắc học:
 
-Dat file vao thu muc: android/app/.
-
-Android Manifest:
-
-Dam bao file android/app/src/main/AndroidManifest.xml da duoc cap quyen Internet va Sinh trac hoc:
-
-XML
-
+```xml
 <uses-permission android:name="android.permission.INTERNET"/>
 <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
-Cho phep ket noi HTTP (Cleartext Traffic) de ket noi voi Localhost Server.
+<application android:usesCleartextTraffic="true" ... >
+```
 
-MainActivity Setup:
+### Bước 4: Cấu hình API Endpoint
+Cập nhật địa chỉ IP Backend trong file `lib/services/api_service.dart`:
+* Emulator (Máy ảo): `http://10.0.2.2:3000`
+* Máy thật: `http://<IP_LAN_MAY_TINH>:3000` (Ví dụ: 192.168.1.5:3000)
 
-File MainActivity.kt phai ke thua tu FlutterFragmentActivity de ho tro local_auth.
 
-ー API Configuration
-Cap nhat dia chi IP cua Backend Server trong file lib/services/api_service.dart:
-
-May ao Android (Emulator): Su dung http://10.0.2.2:3000
-
-Thiet bi that: Su dung IP LAN cua may tinh (vi du: http://192.168.1.x:3000)
-
-Execution Guide
-De he thong hoat dong day du, dam bao rang Backend (Node.js) va AI Service (Python) da duoc khoi chay truoc.
-
-Terminal: Mobile App
-Ket noi thiet bi (May ao hoac May that) va chay lenh sau tai thu muc goc cua du an Flutter:
-
-Bash
-
+### Bước 5: Khởi chạy ứng dụng
+Kết nối thiết bị và chạy lệnh:
+```Bash
 flutter run
-Troubleshooting
-Loi man hinh bi do/treo: Kiem tra lai ket noi Server Node.js va cau hinh IP trong api_service.dart.
-
-Loi "Duplicate GlobalKey": Thuc hien Hot Restart hoac Stop han ung dung va chay lai lenh flutter run.
-
-Loi Sinh trac hoc tren Emulator: Can vao Settings cua Emulator -> Security de thiet lap ma PIN va them Van tay gia lap truoc khi su dung.
+```
