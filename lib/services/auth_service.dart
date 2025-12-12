@@ -33,18 +33,26 @@ class AuthService {
   }
 
   // Xử lý thông báo lỗi tiếng Việt cho thân thiện
-  String _handleAuthError(String code) {
+ String _handleAuthError(String code) {
     switch (code) {
       case 'user-not-found':
-        return 'Không tìm thấy tài khoản này.';
+        return 'Tài khoản không tồn tại.';
       case 'wrong-password':
-        return 'Sai mật khẩu.';
+        return 'Mật khẩu không chính xác.';
+      case 'invalid-credential': // Mã lỗi mới của Firebase
+        return 'Thông tin đăng nhập không đúng.';
       case 'email-already-in-use':
-        return 'Email này đã được đăng ký rồi.';
+        return 'Email này đã được sử dụng bởi tài khoản khác.';
       case 'weak-password':
         return 'Mật khẩu quá yếu (cần ít nhất 6 ký tự).';
       case 'invalid-email':
-        return 'Email không hợp lệ.';
+        return 'Địa chỉ Email không hợp lệ.';
+      case 'network-request-failed':
+        return 'Lỗi kết nối mạng. Vui lòng kiểm tra Wifi/4G.';
+      case 'too-many-requests':
+        return 'Quá nhiều lần thử sai. Vui lòng đợi lát nữa.';
+      case 'user-disabled':
+        return 'Tài khoản này đã bị vô hiệu hóa.';
       default:
         return 'Lỗi xác thực: $code';
     }

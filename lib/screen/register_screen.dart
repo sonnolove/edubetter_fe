@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart'; // Nhớ import
+import 'package:lottie/lottie.dart'; 
 import 'package:my_edu_app/services/api_service.dart';
 import 'package:my_edu_app/services/auth_service.dart';
+import 'package:my_edu_app/utils/toast_helper.dart'; // Import tiện ích thông báo
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -22,7 +23,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final ApiService _apiService = ApiService();
 
   Future<void> _handleRegister() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      // Thông báo khi form chưa hợp lệ
+      ToastHelper.showWarning(context, "Vui lòng kiểm tra lại thông tin nhập.");
+      return;
+    }
+    
     setState(() => _isLoading = true);
 
     try {
@@ -39,14 +45,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (!mounted) return;
-      // 3. Đăng ký xong -> Quay về (AuthGate tự lo phần còn lại)
-      Navigator.of(context).pop(); 
+      
+      // 3. Thông báo thành công & Quay về
+      ToastHelper.showSuccess(context, "Đăng ký thành công! Đang đăng nhập...");
+      
+      // Đợi 1 chút cho người dùng đọc thông báo rồi mới chuyển trang
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) Navigator.of(context).pop(); 
       
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
-      );
+      if (mounted) {
+        // Xử lý lỗi đẹp hơn (AuthService đã trả về tiếng Việt)
+        String errorMsg = e.toString().replaceAll('Exception: ', '');
+        ToastHelper.showError(context, errorMsg);
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -58,7 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       backgroundColor: Colors.grey[200], // Nền xám
       appBar: AppBar(
         title: const Text("Tạo tài khoản mới"),
-        backgroundColor: Colors.transparent, // Trong suốt để thấy nền xám
+        backgroundColor: Colors.transparent, // Trong suốt
         elevation: 0,
         centerTitle: true,
         foregroundColor: Colors.black, // Chữ màu đen
@@ -90,7 +102,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Positioned.fill(
                     child: Transform.translate(
                       // Chỉnh độ tụt xuống y hệt màn hình Login
-                      offset: const Offset(0, 180), 
+                      offset: const Offset(0, 210), 
                       
                       child: Transform(
                         alignment: Alignment.center,
@@ -201,7 +213,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 elevation: 5,
                               ),
                               child: _isLoading
-                                  ? const CircularProgressIndicator(color: Colors.white)
+                                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                                   : const Text('ĐĂNG KÝ NGAY', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                             ),
                           ),

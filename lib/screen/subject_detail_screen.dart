@@ -37,7 +37,7 @@ class _SubjectDetailScreenState extends State<SubjectDetailScreen> {
     final name = subjectName.toLowerCase();
     if (name.contains('địa')) return 'assets/image/SLI_geo.png';
     if (name.contains('sử')) return 'assets/image/SLI_his.png';
-    if (name.contains('pháp') || name.contains('gdcd')) return 'assets/image/SLI_eco.png';
+    if (name.contains('pháp') || name.contains('GDCD')) return 'assets/image/SLI_eco.png';
     return 'assets/image/kt.jpg';
   }
 
