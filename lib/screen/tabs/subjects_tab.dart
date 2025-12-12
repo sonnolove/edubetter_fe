@@ -58,6 +58,7 @@ class _SubjectsTabState extends State<SubjectsTab> {
     if (name.contains('địa')) return 'assets/image/SLI_geo.png';
     if (name.contains('sử')) return 'assets/image/SLI_his.png';
     if (name.contains('pháp') || name.contains('gdcd')) return 'assets/image/SLI_eco.png';
+    if (name.contains('tin học') || name.contains('tin')) return 'assets/image/SLI_tin.png';
     return 'assets/image/kt.jpg';
   }
 
@@ -66,6 +67,7 @@ class _SubjectsTabState extends State<SubjectsTab> {
     if (name.contains('địa')) return 'assets/image/dia.png';
     if (name.contains('sử')) return 'assets/image/su.png';
     if (name.contains('pháp') || name.contains('gdcd')) return 'assets/image/gdcd.png';
+    if (name.contains('tin học') || name.contains('tin')) return 'assets/image/tin.jpg';
     return 'assets/image/kt.jpg';
   }
 

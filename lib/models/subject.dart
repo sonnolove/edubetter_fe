@@ -39,6 +39,7 @@ class Subject {
     if (n.contains('sử') || n.contains('lịch sử')) return 'assets/image/his.jpg';
     if (n.contains('địa')) return 'assets/image/geography.jpg';
     if (n.contains('pháp')) return 'assets/image/economic.jpg';
+    if (n.contains('Tin học') || n.contains('tin')) return 'assets/image/tin.jpg';
     
     // Ảnh mặc định nếu không tìm thấy tên môn (Bạn nên tạo file này)
     return 'assets/image/default.jpg'; 
